@@ -3,7 +3,7 @@ import { SignIn, SignOutButton, useUser } from "@clerk/nextjs";
 import Head from "next/head";
 
 export default function Home() {
-  const hello = api.example.hello.useQuery({ text: "from tRPC" });
+  const { data } = api.posts.getAll.useQuery(); 
   const user = useUser();
   return (
     <>
@@ -18,6 +18,10 @@ export default function Home() {
         ) : (
           <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" />
         )}
+
+        {data?.map((post) => (
+          <p key={post.authorId}>Posts: {post.content}</p>
+        ))}
       </main>
     </>
   );
