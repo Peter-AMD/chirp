@@ -5,15 +5,35 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Head from "next/head";
 import Image from "next/image";
+import { useRef } from "react";
 
 dayjs.extend(relativeTime);
 
 const CreatePostWizard = () => {
+  const inputRef = useRef<HTMLInputElement>(null);
   const { user } = useUser();
-  console.log("user", user);
+  const ctx = api.useContext();
+  const { mutate, isLoading: loadingSavePost } = api.posts.createPost.useMutation({
+    onSuccess: () => {
+      if(!inputRef.current) return null;
+
+      inputRef.current.value = '';
+      void ctx.posts.invalidate();
+    }
+  });
+
   if (!user) {
     return null;
   }
+
+  const buttonSubmit = () => {
+    if (!inputRef.current) {
+      return console.log("no text value");
+    }
+
+    const inputValue = inputRef.current.value;
+    mutate({ content: inputValue });
+  };
 
   return (
     <div className="flex gap-3">
@@ -25,9 +45,12 @@ const CreatePostWizard = () => {
         height={48}
       />
       <input
+        ref={inputRef}
         className="grow bg-transparent outline-none"
         placeholder="Type some emojis!"
+        disabled={loadingSavePost}
       />
+      <button onClick={buttonSubmit} disabled={loadingSavePost}>Save Post</button>
     </div>
   );
 };
@@ -63,8 +86,8 @@ const Feed = () => {
   if (isLoading) return <LoadingSpinner size={60} />;
   if (!data) return <p>No Data</p>;
 
-  return [...data, ...data]?.map(({ post, author }) => (
-    <PostView key={post.authorId} post={post} author={author} />
+  return data?.map(({ post, author }) => (
+    <PostView key={post.id} post={post} author={author} />
   ));
 };
 
