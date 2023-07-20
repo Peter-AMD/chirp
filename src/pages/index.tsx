@@ -1,3 +1,4 @@
+import { LoadingSpinner } from "@/components";
 import { api, type RouterOutputs } from "@/utils/api";
 import { SignIn, SignOutButton, useUser } from "@clerk/nextjs";
 import dayjs from "dayjs";
@@ -56,13 +57,25 @@ const PostView = (props: PostWithUserType) => {
     </li>
   );
 };
-export default function Home() {
+
+const Feed = () => {
   const { data, isLoading } = api.posts.getAll.useQuery();
-  const user = useUser();
+  if (isLoading) return <LoadingSpinner size={60} />;
+  if (!data) return <p>No Data</p>;
 
-  if (isLoading) return <div>Loading...</div>;
-  if (!data) return <div>No data.</div>;
+  return [...data, ...data]?.map(({ post, author }) => (
+    <PostView key={post.authorId} post={post} author={author} />
+  ));
+};
 
+export default function Home() {
+  const { isLoaded: userLoaded, isSignedIn } = useUser();
+  // start fetching asap
+  api.posts.getAll.useQuery();
+
+  if (!userLoaded) {
+    return <div />;
+  }
   return (
     <>
       <Head>
@@ -73,7 +86,7 @@ export default function Home() {
       <main className="flex h-screen justify-center">
         <div className="w-full border-x border-slate-400 md:max-w-2xl">
           <div className="border-b border-slate-400 p-4 ">
-            {user.isSignedIn ? (
+            {isSignedIn ? (
               <>
                 <SignOutButton />
                 <CreatePostWizard />
@@ -84,9 +97,7 @@ export default function Home() {
           </div>
 
           <ul className="flex flex-col">
-            {[...data, ...data]?.map(({ post, author }) => (
-              <PostView key={post.authorId} post={post} author={author} />
-            ))}
+            <Feed />
           </ul>
         </div>
       </main>
