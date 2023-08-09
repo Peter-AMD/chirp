@@ -1,12 +1,40 @@
-import { PageLayout } from "@/components";
+import { LoadingSpinner, PageLayout } from "@/components";
+import PostView from "@/components/postView";
 import { api } from "@/utils/api";
-import { type NextPage } from "next";
+import type {
+  GetStaticPaths,
+  GetStaticProps,
+  InferGetStaticPropsType,
+  NextPage,
+} from "next";
 import Head from "next/head";
 import Image from "next/image";
 
-const Profile: NextPage = () => {
+const ProfileFeed = (props: { username: string }) => {
+  const { data, isLoading } = api.posts.getPostsByUserId.useQuery({
+    username: props.username,
+  });
+  console.log("data", { data, props });
+  if (isLoading) return <LoadingSpinner />;
+  if (!data || data.length === 0) {
+    return <p>User has not posted</p>;
+  }
+  return (
+    <div className="flex flex-col">
+      {data?.map(({ post, author }) => (
+        <PostView author={author} key={post.id} post={post} />
+      ))}
+    </div>
+  );
+};
+
+const Profile: NextPage = (
+  props: InferGetStaticPropsType<typeof getStaticProps>
+) => {
+  const slug = (props?.slug as string) ?? "";
+  console.log("slug", slug);
   const { data, isLoading } = api.profile.getUserByUsername.useQuery({
-    username: "peter-amd",
+    username: slug.replace("@", ""),
   });
 
   if (isLoading) return <div>Loading...</div>;
@@ -32,10 +60,31 @@ const Profile: NextPage = () => {
         <div className="p-4 text-2xl font-bold">
           {`@${data.username ?? ""}`}
         </div>
-        <div className="w-full border-b border-slate-400" />
+        <div className="w-full border-b border-slate-400">
+          <ProfileFeed username={slug} />
+        </div>
       </PageLayout>
     </>
   );
+};
+
+export const getStaticPaths: GetStaticPaths = (context) => {
+  console.log("context", context);
+
+  return {
+    paths: [],
+    fallback: "blocking",
+  };
+};
+
+export const getStaticProps: GetStaticProps = (context) => {
+  console.log("context at staticProps", context);
+
+  return {
+    props: {
+      slug: context.params?.slug,
+    },
+  };
 };
 
 export default Profile;

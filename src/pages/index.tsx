@@ -1,14 +1,10 @@
 import { LoadingSpinner, PageLayout } from "@/components";
+import PostView from "@/components/postView";
 import { toast } from "@/components/ui/use-toast";
-import { api, type RouterOutputs } from "@/utils/api";
+import { api } from "@/utils/api";
 import { SignIn, SignOutButton, useUser } from "@clerk/nextjs";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import Image from "next/image";
-import Link from "next/link";
 import { useRef } from "react";
-
-dayjs.extend(relativeTime);
 
 const CreatePostWizard = () => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,7 +38,7 @@ const CreatePostWizard = () => {
     }
 
     const inputValue = inputRef.current.value;
-    mutate({ content: inputValue });
+    mutate({ content: inputValue, username: user.username ?? "" });
   };
 
   return (
@@ -67,7 +63,7 @@ const CreatePostWizard = () => {
               inputRef.current?.value !== ""
             ) {
               const inputValue = inputRef.current.value;
-              mutate({ content: inputValue });
+              mutate({ content: inputValue, username: user.username ?? "" });
             }
           }
         }}
@@ -79,33 +75,7 @@ const CreatePostWizard = () => {
   );
 };
 
-type PostWithUserType = RouterOutputs["posts"]["getAll"][number];
 
-const PostView = (props: PostWithUserType) => {
-  return (
-    <li className="flex min-h-[66px] gap-6 p-6">
-      <Image
-        alt={`${props.author.username || ""} profile picture`}
-        className="h-12 w-12 rounded-full"
-        height={48}
-        src={props.author.profilePicture}
-        width={48}
-      />
-      <div>
-        <div className="flex gap-2 text-slate-300">
-          <Link
-            href={`/@${props.author.username}`}
-          >{`@${props.author.username}`}</Link>
-          <span>·</span>
-          <span className="font-thin">
-            {dayjs(props.post.createdAt).fromNow()}
-          </span>
-        </div>
-        <p className="text-2xl">{props.post.content}</p>
-      </div>
-    </li>
-  );
-};
 
 const Feed = () => {
   const { data, isLoading } = api.posts.getAll.useQuery();
