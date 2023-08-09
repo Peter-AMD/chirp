@@ -29,6 +29,17 @@ const config = {
       },
     ],
     "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    "react/jsx-sort-props": [
+      "error",
+      {
+        callbacksLast: true,
+        shorthandFirst: false,
+        shorthandLast: true,
+        multiline: "last",
+        ignoreCase: true,
+        noSortAlphabetically: false,
+      },
+    ],
   },
 };
 
